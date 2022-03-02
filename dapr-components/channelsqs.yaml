@@ -1,0 +1,24 @@
+#https://docs.dapr.io/reference/components-reference/supported-bindings/sqs/
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: channels-backend-services-sqs-wa-twilio
+  namespace: default
+spec:
+  type: bindings.aws.sqs
+  version: v1
+  metadata:
+    - name: queueName
+      value: ChannelQueue-WATilio-14155238886.fifo
+    - name: region
+      value: eu-central-1
+    - name: accessKey
+      secretKeyRef:
+        name: accessKey
+        key: accessKey
+    - name: secretKey
+      secretKeyRef:
+        name: secretKey
+        key: secretKey
+auth:
+  secretStore: channels-backend-services-secret-store
