@@ -1,38 +1,36 @@
 package main
 
 import (
-	"fmt"
-	dapr "github.com/dapr/go-sdk/client"
-	"github.com/gorilla/mux"
+	"context"
+	"github.com/dapr/go-sdk/service/common"
+	daprd "github.com/dapr/go-sdk/service/http"
+	"log"
 	"net/http"
 )
 
-const DAPR_APP_PORT = "6002"
+func main() {
+	s := daprd.NewService(":6002")
 
-func bindingHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Received Message!")
-	/*w.Header().Set("Content-Type", "application/json")
-	var orderId int
-	err := json.NewDecoder(r.Body).Decode(&orderId)
-	fmt.Println("Received Message: ", orderId)
-	if err != nil {
-		fmt.Println("error parsing checkout input binding payload: %s", err)
-		w.WriteHeader(http.StatusOK)
-		return
-	}*/
+	// cron binding is used for quick debugging / troubleshooting only
+	/* if err := s.AddBindingInvocationHandler("/run", cronHandler); err != nil {
+		log.Fatalf("error adding binding handler: %v", err)
+	} */
+
+	if err := s.AddBindingInvocationHandler("/channels-backend-services-sqs-wa-twilio", sqsHandler); err != nil {
+		log.Fatalf("error adding binding handler: %v", err)
+	}
+
+	if err := s.Start(); err != nil && err != http.ErrServerClosed {
+		log.Fatalf("error listenning: %v", err)
+	}
 }
 
-// https://docs.dapr.io/developing-applications/building-blocks/bindings/howto-triggers/
-func main() {
-	client, err := dapr.NewClient()
-	if err != nil {
-		panic(err)
-	}
-	defer client.Close()
+func cronHandler(ctx context.Context, in *common.BindingEvent) (out []byte, err error) {
+	log.Printf("cronHandler binding - Data:%s, Meta:%v", in.Data, in.Metadata)
+	return nil, nil
+}
 
-	fmt.Println("Serious DAPR stuff here...!")
-
-	r := mux.NewRouter()
-	r.HandleFunc("/channels-backend-services-sqs-wa-twilio", bindingHandler).Methods("POST", "OPTIONS")
-	http.ListenAndServe(":"+DAPR_APP_PORT, r)
+func sqsHandler(ctx context.Context, in *common.BindingEvent) (out []byte, err error) {
+	log.Printf("sqsHandler binding - Data:%s, Meta:%v", in.Data, in.Metadata)
+	return nil, nil
 }
