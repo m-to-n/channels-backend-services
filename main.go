@@ -3,17 +3,54 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	daprc "github.com/dapr/go-sdk/client"
 	"github.com/dapr/go-sdk/service/common"
 	daprd "github.com/dapr/go-sdk/service/http"
-	"github.com/m-to-n/common/channels"
 	whatsapp "github.com/m-to-n/common/channels/whatsapp-twilio"
 	"github.com/m-to-n/common/logging"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
+	"strings"
 )
 
-func foo() channels.ChannelType {
-	return channels.Unknown
+// quick & dirty for initial test only! do it properly! :)
+// https://www.twilio.com/docs/whatsapp/tutorial
+func sendTwilioResponse(request whatsapp.TwilioRequest, response string, accSid string, authToken string) (*string, error) {
+	client := &http.Client{}
+	twilioUrl := fmt.Sprintf("https://api.twilio.com/2010-04-01/Accounts/%s/Messages.json?From", accSid)
+	v := url.Values{}
+	v.Set("From", request.To)
+	v.Set("To", request.From)
+	v.Set("Body", response)
+
+	req, err := http.NewRequest("POST", twilioUrl, strings.NewReader(v.Encode()))
+	if err != nil {
+		return nil, err
+	}
+
+	req.SetBasicAuth(accSid, authToken)
+	// req.Header.Add("Authorization", "Basic ...")
+	// req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	log.Printf("sending twilio request: %s: ", req)
+
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return nil, err
+	}
+
+	bodyText, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	s := string(bodyText)
+	return &s, nil
+
 }
 
 func cronHandler(ctx context.Context, in *common.BindingEvent) (out []byte, err error) {
@@ -40,6 +77,30 @@ func sqsHandler(ctx context.Context, in *common.BindingEvent) ([]byte, error) {
 	}
 	log.Printf("twilio request: %s: ", *structStr)
 
+	// create the client
+	client, err := daprc.NewClient()
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	// TBD: this will be taken from tenant config!
+	opt := map[string]string{}
+	secretAccId, err := client.GetSecret(ctx, "channels-backend-services-secret-store", "twilioAccSid", opt)
+	secretAuthToken, err := client.GetSecret(ctx, "channels-backend-services-secret-store", "twilioAuthToken", opt)
+
+	log.Println(secretAccId)
+	log.Println(secretAuthToken)
+
+	resp, err := sendTwilioResponse(tReq, fmt.Sprintf("you said: %s", tReq.Body), secretAccId["twilioAccSid"], secretAuthToken["twilioAuthToken"])
+
+	if err != nil {
+		log.Println("unable to send twilio response")
+		log.Println(err)
+		return nil, err
+	}
+
+	log.Println("twilio response sent %s", *resp)
 	return nil, nil
 }
 
