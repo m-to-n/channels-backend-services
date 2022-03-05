@@ -3,11 +3,11 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/dapr/go-sdk/service/common"
 	daprd "github.com/dapr/go-sdk/service/http"
 	"github.com/m-to-n/common/channels"
 	whatsapp "github.com/m-to-n/common/channels/whatsapp-twilio"
+	"github.com/m-to-n/common/logging"
 	"log"
 	"net/http"
 )
@@ -21,19 +21,24 @@ func cronHandler(ctx context.Context, in *common.BindingEvent) (out []byte, err 
 	return nil, nil
 }
 
-func sqsHandler(ctx context.Context, in *common.BindingEvent) (out []byte, err error) {
+func sqsHandler(ctx context.Context, in *common.BindingEvent) ([]byte, error) {
 	log.Printf("sqsHandler binding - Data:%s, Meta:%v", in.Data, in.Metadata)
 
 	var tReq whatsapp.TwilioRequest
 
-	errParse := json.Unmarshal(in.Data, &tReq)
+	err := json.Unmarshal(in.Data, &tReq)
 	if err != nil {
-		log.Printf("sqsHandler: error when unamrshaling sqs payload: #{errParse}")
-		return nil, errParse
+		log.Printf("sqsHandler: error when unamrshaling sqs payload: #{err}")
+		return nil, err
 	}
 
 	// move struct pretty print to common
-	fmt.Printf("twilio request struct: %#v\n", tReq)
+	var structStr *string
+	structStr, err = logging.StructToPrettyString(tReq)
+	if err != nil {
+		return nil, err
+	}
+	log.Printf("twilio request: %s: ", structStr)
 
 	return nil, nil
 }
