@@ -24,7 +24,7 @@ func ChannelTypeFromString(s string) (ChannelType, error) {
 	case WhatsApp.channelType:
 		return WhatsApp, nil
 	}
-	time.Now()
+
 	return Unknown, errors.New("unknown channel type: " + s)
 }
 
