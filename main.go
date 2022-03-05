@@ -38,7 +38,7 @@ func sqsHandler(ctx context.Context, in *common.BindingEvent) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("twilio request: %s: ", structStr)
+	log.Printf("twilio request: %s: ", *structStr)
 
 	return nil, nil
 }
