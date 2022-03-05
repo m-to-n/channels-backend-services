@@ -4,13 +4,13 @@ import (
 	"context"
 	"github.com/dapr/go-sdk/service/common"
 	daprd "github.com/dapr/go-sdk/service/http"
-	"github.com/m-to-n/channels-backend-services/data"
+	"github.com/m-to-n/common/channels"
 	"log"
 	"net/http"
 )
 
-func foo() data.ChannelType {
-	return data.Unknown
+func foo() channels.ChannelType {
+	return channels.Unknown
 }
 
 func cronHandler(ctx context.Context, in *common.BindingEvent) (out []byte, err error) {
