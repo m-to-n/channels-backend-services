@@ -33,7 +33,7 @@ func sendTwilioResponse(request whatsapp.TwilioRequest, response string, accSid 
 
 	req.SetBasicAuth(accSid, authToken)
 	// req.Header.Add("Authorization", "Basic ...")
-	// req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 	log.Printf("sending twilio request: %s: ", req)
 
