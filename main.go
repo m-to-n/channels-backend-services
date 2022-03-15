@@ -4,11 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	daprc "github.com/dapr/go-sdk/client"
 	"github.com/dapr/go-sdk/service/common"
 	"github.com/m-to-n/channels-backend-services/dapr"
 	whatsapp "github.com/m-to-n/common/channels/whatsapp-twilio"
 	common_dapr "github.com/m-to-n/common/dapr"
 	"github.com/m-to-n/common/logging"
+	"github.com/m-to-n/common/tenants"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -91,6 +93,30 @@ func sqsHandler(ctx context.Context, in *common.BindingEvent) ([]byte, error) {
 
 	log.Println(secretAccId)
 	log.Println(secretAuthToken)
+
+	content := &daprc.DataContent{
+		ContentType: "application/json",
+		Data:        []byte(fmt.Sprintf(`{ "accountSid": "%s", "receiverPhoneNumber": "%s" }`, tReq.AccountSid, tReq.To)),
+	}
+
+	result, err := client.InvokeMethodWithContent(ctx, "config-management", "getTenantConfigForTwilioWAReq", "get", content)
+
+	if err != nil {
+		log.Println("getTenantConfigForTwilioWAReq error")
+		log.Println(err)
+		return nil, err
+	}
+
+	var tenant tenants.TenantConfig
+	err = json.Unmarshal(result, &tenant)
+	if err != nil {
+		log.Printf("tenant unamrshaling error: %s ", err.Error())
+		return nil, err
+	}
+
+	// quick & dirty ;)
+	log.Println("tenant.secretAccId" + tenant.Channels[0].Data.WhatsApp.AccountSid)
+	log.Println("tenant.secretAuthToken" + tenant.Channels[0].Data.WhatsApp.AuthToken)
 
 	resp, err := sendTwilioResponse(tReq, fmt.Sprintf("you said: %s", tReq.Body), secretAccId["twilioAccSid"], secretAuthToken["twilioAuthToken"])
 
