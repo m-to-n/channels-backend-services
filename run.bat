@@ -1,1 +1,1 @@
-dapr run --log-level debug --app-id channels-backend-services --app-protocol http --app-port 6002 --components-path ./dapr-components go run main.go
+dapr run --log-level debug --app-id channels-backend-services --app-protocol grpc --dapr-http-port 3600 --dapr-grpc-port 36000 --app-port 36001 --components-path ./dapr-components go run main.go

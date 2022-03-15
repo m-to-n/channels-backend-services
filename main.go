@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	daprc "github.com/dapr/go-sdk/client"
 	"github.com/dapr/go-sdk/service/common"
-	daprd "github.com/dapr/go-sdk/service/http"
+	"github.com/m-to-n/channels-backend-services/dapr"
 	whatsapp "github.com/m-to-n/common/channels/whatsapp-twilio"
+	common_dapr "github.com/m-to-n/common/dapr"
 	"github.com/m-to-n/common/logging"
 	"io/ioutil"
 	"log"
@@ -78,11 +78,11 @@ func sqsHandler(ctx context.Context, in *common.BindingEvent) ([]byte, error) {
 	log.Printf("twilio request: %s: ", *structStr)
 
 	// create the client
-	client, err := daprc.NewClient()
-	if err != nil {
+	client := common_dapr.DaprClient(dapr.DAPR_GRPC_PORT)
+	if client == nil {
+		log.Printf("dapr client init error")
 		return nil, err
 	}
-	defer client.Close()
 
 	// TBD: this will be taken from tenant config!
 	opt := map[string]string{}
@@ -105,14 +105,14 @@ func sqsHandler(ctx context.Context, in *common.BindingEvent) ([]byte, error) {
 }
 
 func main() {
-	s := daprd.NewService(":6002")
+	s := common_dapr.DaprService(dapr.DAPR_APP_GRPC_ADDR)
 
 	// cron binding is used for quick debugging / troubleshooting only
 	/* if err := s.AddBindingInvocationHandler("/run", cronHandler); err != nil {
 		log.Fatalf("error adding binding handler: %v", err)
 	} */
 
-	if err := s.AddBindingInvocationHandler("/channels-backend-services-sqs-wa-twilio", sqsHandler); err != nil {
+	if err := s.AddBindingInvocationHandler(dapr.DAPR_BINDING_SQS_GRPC, sqsHandler); err != nil {
 		log.Fatalf("error adding binding handler: %v", err)
 	}
 
