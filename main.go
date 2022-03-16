@@ -86,23 +86,22 @@ func sqsHandler(ctx context.Context, in *common.BindingEvent) ([]byte, error) {
 		return nil, err
 	}
 
-	// TBD: this will be taken from tenant config!
-	opt := map[string]string{}
+	// initial way of twilio keys retrieval (from secrets). for multi tenant approach we are now using config-management lookup
+	/* opt := map[string]string{}
 	secretAccId, err := client.GetSecret(ctx, "channels-backend-services-secret-store", "twilioAccSid", opt)
 	secretAuthToken, err := client.GetSecret(ctx, "channels-backend-services-secret-store", "twilioAuthToken", opt)
-
 	log.Println(secretAccId)
-	log.Println(secretAuthToken)
+	log.Println(secretAuthToken) */
 
 	content := &daprc.DataContent{
 		ContentType: "application/json",
 		Data:        []byte(fmt.Sprintf(`{ "accountSid": "%s", "receiverPhoneNumber": "%s" }`, tReq.AccountSid, tReq.To)),
 	}
 
-	result, err := client.InvokeMethodWithContent(ctx, "config-management", "getTenantConfigForTwilioWAReq", "get", content)
+	result, err := client.InvokeMethodWithContent(ctx, "config-management", "getTenantConfigForTwilioWA", "get", content)
 
 	if err != nil {
-		log.Println("getTenantConfigForTwilioWAReq error")
+		log.Println("getTenantConfigForTwilioWA error")
 		log.Println(err)
 		return nil, err
 	}
@@ -114,11 +113,16 @@ func sqsHandler(ctx context.Context, in *common.BindingEvent) ([]byte, error) {
 		return nil, err
 	}
 
-	// quick & dirty ;)
-	log.Println("tenant.secretAccId" + tenant.Channels[0].Data.WhatsApp.AccountSid)
-	log.Println("tenant.secretAuthToken" + tenant.Channels[0].Data.WhatsApp.AuthToken)
+	// quick & dirty but already using config-management lookup ;)
+	secretAccId := tenant.Channels[0].Data.WhatsApp.AccountSid
+	secretAuthToken := tenant.Channels[0].Data.WhatsApp.AuthToken
+	log.Println("tenant.secretAccId" + secretAccId)
+	log.Println("tenant.secretAuthToken" + secretAuthToken)
 
-	resp, err := sendTwilioResponse(tReq, fmt.Sprintf("you said: %s", tReq.Body), secretAccId["twilioAccSid"], secretAuthToken["twilioAuthToken"])
+	// values from dapr GetSecret where arrays!
+	// resp, err := sendTwilioResponse(tReq, fmt.Sprintf("you said: %s", tReq.Body), secretAccId["twilioAccSid"], secretAuthToken["twilioAuthToken"])
+	// values from config-management are not!
+	resp, err := sendTwilioResponse(tReq, fmt.Sprintf("you said: %s", tReq.Body), secretAccId, secretAuthToken)
 
 	if err != nil {
 		log.Println("unable to send twilio response")
