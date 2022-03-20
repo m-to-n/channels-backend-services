@@ -10,6 +10,7 @@ import (
 	whatsapp "github.com/m-to-n/common/channels/whatsapp-twilio"
 	common_dapr "github.com/m-to-n/common/dapr"
 	"github.com/m-to-n/common/logging"
+	"github.com/m-to-n/common/sessions"
 	"github.com/m-to-n/common/tenants"
 	"io/ioutil"
 	"log"
@@ -119,10 +120,23 @@ func sqsHandler(ctx context.Context, in *common.BindingEvent) ([]byte, error) {
 	log.Println("tenant.secretAccId" + secretAccId)
 	log.Println("tenant.secretAuthToken" + secretAuthToken)
 
+	sessionId := fmt.Sprintf("%s_%s", tReq.From, tReq.To)
+	actSession := sessions.NewSessionActorClientStub(sessionId)
+	sessionResponse, err := actSession.SendMessage(ctx, tReq.Body)
+
+	if err != nil {
+		_, err := sendTwilioResponse(tReq, "Opps, error :( , try me again.: ", secretAccId, secretAuthToken)
+		if err != nil {
+			log.Println("unable to send twilio error message")
+			log.Println(err)
+			return nil, err
+		}
+	}
+
 	// values from dapr GetSecret where arrays!
 	// resp, err := sendTwilioResponse(tReq, fmt.Sprintf("you said: %s", tReq.Body), secretAccId["twilioAccSid"], secretAuthToken["twilioAuthToken"])
 	// values from config-management are not!
-	resp, err := sendTwilioResponse(tReq, fmt.Sprintf("you said: %s", tReq.Body), secretAccId, secretAuthToken)
+	resp, err := sendTwilioResponse(tReq, sessionResponse, secretAccId, secretAuthToken)
 
 	if err != nil {
 		log.Println("unable to send twilio response")
