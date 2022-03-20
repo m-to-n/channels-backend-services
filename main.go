@@ -122,6 +122,7 @@ func sqsHandler(ctx context.Context, in *common.BindingEvent) ([]byte, error) {
 
 	sessionId := fmt.Sprintf("%s_%s", tReq.From, tReq.To)
 	actSession := sessions.NewSessionActorClientStub(sessionId)
+	client.ImplActorClientStub(actSession)
 	sessionResponse, err := actSession.SendMessage(ctx, tReq.Body)
 
 	if err != nil {
