@@ -59,6 +59,8 @@ github.com/m-to-n/common v0.0.0-20220315190743-1ca91311612d h1:jwcbVUBh3unDpqb0Y
 github.com/m-to-n/common v0.0.0-20220315190743-1ca91311612d/go.mod h1:c33c1Jfk+r590Cd7e7sdgFuUSbmVL59Thycnzyn9woE=
 github.com/m-to-n/common v0.0.0-20220315194537-1c92d82fd1ab h1:DmdkqVU0z2cibmUfgIhiRYwNTQYQwQBnPpR2Kgu2pgo=
 github.com/m-to-n/common v0.0.0-20220315194537-1c92d82fd1ab/go.mod h1:c33c1Jfk+r590Cd7e7sdgFuUSbmVL59Thycnzyn9woE=
+github.com/m-to-n/common v0.0.0-20220320094248-3a803ad7f304 h1:C3J3jgGlb85PVbTRpgntnieoYuaatak/w/76akvlxJ4=
+github.com/m-to-n/common v0.0.0-20220320094248-3a803ad7f304/go.mod h1:c33c1Jfk+r590Cd7e7sdgFuUSbmVL59Thycnzyn9woE=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
